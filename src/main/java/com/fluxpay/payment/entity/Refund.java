@@ -1,10 +1,8 @@
 package com.fluxpay.payment.entity;
 
 import com.fluxpay.common.entity.Money;
-import com.fluxpay.common.enums.OrderStatus;
-import com.fluxpay.merchant.entity.Merchant;
+import com.fluxpay.common.enums.RefundStatus;
 import jakarta.persistence.*;
-import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -13,36 +11,41 @@ import java.util.Map;
 import java.util.UUID;
 
 @Entity
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@Table(name = "order_record")
-public class OrderRecord {
+@Table(name = "refund")
+public class Refund {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, name = "merchant_id")
-    private UUID merchantId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "payment_id", nullable = false)
+    private Payment payment;
+
+    @Column(nullable = false, unique = true)
+    private UUID merchant;
 
     @Embedded
     private Money amount;
 
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus = OrderStatus.CREATED;
-
     @Column(nullable = false)
-    private Integer attempts = 0;
+    private RefundStatus status = RefundStatus.PENDING;
+
+    @Column(length = 100)
+    private String bankReference;
+
+    @Column(length = 100)
+    private String errorCode;
+
+    @Column(length = 500)
+    private String errorDescription;
 
     @JdbcTypeCode((SqlTypes.JSON))
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> notes;
 
-    private LocalDateTime expiresAt;
+    private LocalDateTime processedAt;
 
 
 

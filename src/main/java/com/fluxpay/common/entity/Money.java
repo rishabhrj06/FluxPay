@@ -1,19 +1,36 @@
 package com.fluxpay.common.entity;
 
+import jakarta.persistence.Embeddable;
+
+@Embeddable
 public class Money {
-    private int amountUnit;
+    private int amountUnits;
     private String currency;
 
-    public Money(int amountUnit, String currency){
-        this.amountUnit = amountUnit;
+    private Money(int amountUnits, String currency){
+        this.amountUnits = amountUnits;
         this.currency = currency;
     }
 
-    public Money of(int amountUnit, String currency){
-        return new Money(amountUnit, currency);
+    public static Money of(int amountUnits, String currency){
+        return new Money(amountUnits, currency);
     }
 
-    public Money inr(int amountUnit, String currency){
-        return
+    public static Money inr(int amountUnits){
+        return new Money(amountUnits, "INR");
+    }
+
+    public Money add(Money other){
+        if(!this.currency.equals(other.currency)){
+            throw new IllegalArgumentException("Currency Mismatch");
+        }
+        return new Money(this.amountUnits + other.amountUnits, this.currency);
+    }
+
+    public Money sub(Money other){
+        if(!this.currency.equals(other.currency)){
+            throw new IllegalArgumentException("Currency Mismatch");
+        }
+        return new Money(this.amountUnits - other.amountUnits, this.currency);
     }
 }
