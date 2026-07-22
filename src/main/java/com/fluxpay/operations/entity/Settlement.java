@@ -17,7 +17,7 @@ public class Settlement {
     private UUID id;
 
     @Column(nullable = false)
-    private Merchant merchant;
+    private UUID merchant;
 
     @Embedded
     @AttributeOverrides({

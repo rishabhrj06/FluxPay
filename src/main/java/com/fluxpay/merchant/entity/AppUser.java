@@ -20,15 +20,12 @@ public class AppUser {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "merchant_id")
     private Merchant merchant;
 
     @Column(nullable = false)
     private String email;
-
-    @Column(nullable = false, unique = true)
-    private String username;
 
     @Column(nullable = false)
     private String password;

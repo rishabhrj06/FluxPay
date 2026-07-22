@@ -4,6 +4,8 @@ import com.fluxpay.common.enums.BusinessType;
 import com.fluxpay.common.enums.MerchantStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -62,10 +64,12 @@ public class Merchant {
     @Column(length = 100)
     private String settlementBankHolderName;
 
-    @CreatedDate
+    @CreationTimestamp()
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    @LastModifiedDate
+    @UpdateTimestamp()
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
 }
