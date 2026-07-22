@@ -24,6 +24,9 @@ public class AppUser {
     @JoinColumn(name = "merchant_id")
     private Merchant merchant;
 
+    @Column(nullable = false)
+    private String email;
+
     @Column(nullable = false, unique = true)
     private String username;
 
