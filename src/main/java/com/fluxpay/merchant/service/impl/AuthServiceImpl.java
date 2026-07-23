@@ -10,10 +10,10 @@ import com.fluxpay.merchant.entity.Merchant;
 import com.fluxpay.merchant.repository.AppUserRespository;
 import com.fluxpay.merchant.repository.MerchantRepository;
 import com.fluxpay.merchant.service.AuthService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 

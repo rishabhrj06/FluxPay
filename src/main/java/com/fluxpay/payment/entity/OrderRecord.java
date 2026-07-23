@@ -28,6 +28,9 @@ public class OrderRecord {
     @Column(nullable = false, name = "merchant_id")
     private UUID merchantId;
 
+    @Column(length = 100)
+    private String receipt; //order id from merchant's backend
+
     @Embedded
     private Money amount;
 
@@ -36,6 +39,7 @@ public class OrderRecord {
     private OrderStatus orderStatus = OrderStatus.CREATED;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer attempts = 0;
 
     @JdbcTypeCode((SqlTypes.JSON))
@@ -43,7 +47,4 @@ public class OrderRecord {
     private Map<String, Object> notes;
 
     private LocalDateTime expiresAt;
-
-
-
 }
