@@ -1,5 +1,6 @@
 package com.fluxpay.merchant.entity;
 
+import com.fluxpay.common.entity.BaseEntity;
 import com.fluxpay.common.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,8 +14,14 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "app_user")
-public class AppUser {
+@Table(
+        name = "app_user",
+        indexes = {
+                @Index(name = "idx_app_user_merchant",
+                        columnList = "merchant_id")
+        }
+)
+public class AppUser extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

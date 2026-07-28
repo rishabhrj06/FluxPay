@@ -1,5 +1,6 @@
 package com.fluxpay.merchant.entity;
 
+import com.fluxpay.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,8 +13,14 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "customer")
-public class Customer {
+@Table(
+        name = "customer",
+        indexes = {
+                @Index(name = "idx_customer_merchant", columnList = "merchant_id"),
+                @Index(name = "idx_customer_email", columnList = "email")
+        }
+)
+public class Customer extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

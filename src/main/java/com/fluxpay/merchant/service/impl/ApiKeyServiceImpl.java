@@ -61,7 +61,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                                 apiKey.getEnvironment(),
                                 apiKey.isEnabled(),
                                 apiKey.getLastUsedAt(),
-                                null)
+                                apiKey.getCreatedAt())
                 )
                 .toList();
     }
@@ -82,6 +82,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         ApiKey apiKey = apiKeyRepository.findById(keyId)
                 .filter(k -> k.getMerchant().getId().equals(merchantId))
                 .orElseThrow(() -> new ResourceNotFoundException("API_KEY", keyId));
+
+        if(!apiKey.isEnabled()) throw new RuntimeException("Can't rotate disabled api key");
 
         String newRawSecret = RandomizerUtil.randomBase64(40);
         apiKey.setPreviousKeySecretHash(apiKey.getKeySecretHash());

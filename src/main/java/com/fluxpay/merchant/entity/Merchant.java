@@ -1,13 +1,12 @@
 package com.fluxpay.merchant.entity;
 
+import com.fluxpay.common.entity.BaseEntity;
 import com.fluxpay.common.enums.BusinessType;
 import com.fluxpay.common.enums.MerchantStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -18,8 +17,13 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "merchant")
-public class Merchant {
+@Table(
+        name = "merchant",
+        indexes = {
+                @Index(name = "idx_merchant_merchant_status", columnList = "merchant_status")
+        }
+)
+public class Merchant extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -44,7 +48,7 @@ public class Merchant {
     @Column(length = 100)
     private String businessUrl;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "merchant_status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private MerchantStatus merchantStatus = MerchantStatus.PENDING_KYC;
@@ -63,13 +67,5 @@ public class Merchant {
 
     @Column(length = 100)
     private String settlementBankHolderName;
-
-    @CreationTimestamp()
-    @Column(name = "created_at", updatable = false, nullable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp()
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
 }

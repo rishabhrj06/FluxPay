@@ -21,4 +21,11 @@ public class GlobalExceptionHandler {
                 ErrorResponse.of(ex.getResourceName().toUpperCase()+ "_NOT_FOUND: ", ex.getIdentifier())
         );
     }
+
+    @ExceptionHandler(BusniessRuleViolationException.class)
+    public ResponseEntity<ErrorResponse> handleBusniessRuleViolationException(BusniessRuleViolationException ex){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ErrorResponse.of(ex.getErrorCode(), ex.getMessage())
+        );
+    }
 }

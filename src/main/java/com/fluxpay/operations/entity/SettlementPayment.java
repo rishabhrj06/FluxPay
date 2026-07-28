@@ -1,5 +1,6 @@
 package com.fluxpay.operations.entity;
 
+import com.fluxpay.common.entity.BaseEntity;
 import jakarta.persistence.*;
 
 @Entity

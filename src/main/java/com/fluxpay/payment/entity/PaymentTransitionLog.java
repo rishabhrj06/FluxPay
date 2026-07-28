@@ -1,5 +1,6 @@
 package com.fluxpay.payment.entity;
 
+import com.fluxpay.common.entity.BaseEntity;
 import com.fluxpay.common.enums.PaymentEvent;
 import com.fluxpay.common.enums.PaymentStatus;
 import jakarta.persistence.*;
@@ -8,8 +9,13 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "payment_transition_log")
-public class PaymentTransitionLog {
+@Table(
+        name = "payment_transition_log",
+        indexes = {
+                @Index(name = "idx_payment_transition_log_payment_id", columnList = "payment_id")
+        }
+)
+public class PaymentTransitionLog extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

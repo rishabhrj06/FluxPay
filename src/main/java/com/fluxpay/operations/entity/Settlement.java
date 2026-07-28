@@ -1,5 +1,6 @@
 package com.fluxpay.operations.entity;
 
+import com.fluxpay.common.entity.BaseEntity;
 import com.fluxpay.common.entity.Money;
 import com.fluxpay.common.enums.SettlementStatus;
 import com.fluxpay.merchant.entity.Merchant;
@@ -10,7 +11,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "settlement")
-public class Settlement {
+public class Settlement extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

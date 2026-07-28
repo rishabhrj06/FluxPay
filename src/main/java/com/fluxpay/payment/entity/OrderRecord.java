@@ -1,8 +1,8 @@
 package com.fluxpay.payment.entity;
 
+import com.fluxpay.common.entity.BaseEntity;
 import com.fluxpay.common.entity.Money;
 import com.fluxpay.common.enums.OrderStatus;
-import com.fluxpay.merchant.entity.Merchant;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -18,8 +18,14 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "order_record")
-public class OrderRecord {
+@Table(
+        name = "order_record",
+        indexes = {
+                @Index(name = "idx_order_record_id_merchant_id", columnList = "id, merchant_id"),
+                @Index(name = "idx_order_record_merchant_id", columnList = "merchant_id")
+        }
+)
+public class OrderRecord extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -36,7 +42,7 @@ public class OrderRecord {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus = OrderStatus.CREATED;
+    private OrderStatus status = OrderStatus.CREATED;
 
     @Column(nullable = false)
     @Builder.Default

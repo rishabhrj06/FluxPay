@@ -1,5 +1,6 @@
 package com.fluxpay.payment.entity;
 
+import com.fluxpay.common.entity.BaseEntity;
 import com.fluxpay.common.entity.Money;
 import com.fluxpay.common.enums.RefundStatus;
 import jakarta.persistence.*;
@@ -11,8 +12,10 @@ import java.util.Map;
 import java.util.UUID;
 
 @Entity
-@Table(name = "refund")
-public class Refund {
+@Table(
+        name = "refund"
+)
+public class Refund extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

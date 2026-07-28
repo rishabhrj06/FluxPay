@@ -1,7 +1,8 @@
 package com.fluxpay.payment.entity;
 
+import com.fluxpay.common.entity.BaseEntity;
 import com.fluxpay.common.entity.Money;
-import com.fluxpay.common.enums.PaymentMethods;
+import com.fluxpay.common.enums.PaymentMethod;
 import com.fluxpay.common.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,8 +19,14 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "payment")
-public class Payment {
+@Table(
+        name = "payment",
+        indexes = {
+                @Index(name = "idx_payment_order", columnList = "order_id"),
+                @Index(name = "idx_payment_merchant_id", columnList = "merchant_id")
+        }
+)
+public class Payment extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -31,7 +38,7 @@ public class Payment {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PaymentStatus paymentStatus;
+    private PaymentStatus status;
 
     @Column(nullable = false)
     private UUID merchantId;
@@ -43,7 +50,7 @@ public class Payment {
     private String idempotencyKey;
 
     @Column(nullable = false)
-    private PaymentMethods paymentMethods;
+    private PaymentMethod method;
 
     @JdbcTypeCode((SqlTypes.JSON))
     @Column(name = "method_details", columnDefinition = "jsonb")
