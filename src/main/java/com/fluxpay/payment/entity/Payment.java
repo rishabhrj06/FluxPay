@@ -57,7 +57,7 @@ public class Payment extends BaseEntity {
     private Map<String, Object> methodDetails;
 
     @Column(length = 100)
-    private String bankReference;
+    private String processorReference;
 
     @Column(length = 100)
     private String errorCode;

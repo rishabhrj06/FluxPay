@@ -1,8 +1,7 @@
 package com.fluxpay.payment.controller;
 
-import com.fluxpay.payment.dto.request.CreateOrderRequest;
-import com.fluxpay.payment.dto.response.OrderResponse;
-import com.fluxpay.payment.service.OrderService;
+import com.fluxpay.payment.dto.request.PaymentInitRequest;
+import com.fluxpay.payment.dto.response.PaymentResponse;
 import com.fluxpay.payment.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,16 +15,18 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/v1/orders")
+@RequestMapping("v1/payments")
 @RequiredArgsConstructor
-public class OrderController {
+public class PaymentController {
 
-    private final OrderService orderService;
     UUID merchantId = UUID.fromString("c5d157b0-bad2-49cc-b295-aa8da04f8d3c");
 
+    private final PaymentService paymentService;
+
     @PostMapping
-    public ResponseEntity<OrderResponse> createOrder(@RequestBody @Valid CreateOrderRequest request){
+    public ResponseEntity<PaymentResponse> initiatePayment(@Valid @RequestBody PaymentInitRequest request){
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(orderService.createOrder(merchantId, request));
+                .body(paymentService.initiatePayment(merchantId, request));
     }
+
 }
