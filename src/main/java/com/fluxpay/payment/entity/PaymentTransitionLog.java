@@ -1,9 +1,11 @@
 package com.fluxpay.payment.entity;
 
 import com.fluxpay.common.entity.BaseEntity;
+import com.fluxpay.common.enums.PaymentActor;
 import com.fluxpay.common.enums.PaymentEvent;
 import com.fluxpay.common.enums.PaymentStatus;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -15,6 +17,11 @@ import java.util.UUID;
                 @Index(name = "idx_payment_transition_log_payment_id", columnList = "payment_id")
         }
 )
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class PaymentTransitionLog extends BaseEntity {
 
     @Id
@@ -38,7 +45,7 @@ public class PaymentTransitionLog extends BaseEntity {
     private PaymentStatus toStatus;
 
     @Column(name = "actor", length = 100)
-    private String actor;
+    private PaymentActor actor;
 
     @Column(name = "occurred_at", nullable = false)
     private LocalDateTime occurredAt;

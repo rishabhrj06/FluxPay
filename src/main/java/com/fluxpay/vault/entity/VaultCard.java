@@ -1,13 +1,20 @@
 package com.fluxpay.vault.entity;
 
 import com.fluxpay.common.entity.BaseEntity;
+import com.fluxpay.common.enums.CardBrand;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "vault_card")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class VaultCard extends BaseEntity {
 
     @Id
@@ -27,7 +34,7 @@ public class VaultCard extends BaseEntity {
     private byte[] encryptedDek; //random String to encrypt the pan (Via generate through randomizer or something)
 
     @Column(nullable = false)
-    private String brand;
+    private CardBrand brand;
 
     @Column(nullable = false, length = 2)
     private String expiryMonth;

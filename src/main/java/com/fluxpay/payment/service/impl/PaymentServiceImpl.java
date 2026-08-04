@@ -1,6 +1,7 @@
 package com.fluxpay.payment.service.impl;
 
 import com.fluxpay.common.enums.OrderStatus;
+import com.fluxpay.common.enums.PaymentEvent;
 import com.fluxpay.common.enums.PaymentStatus;
 import com.fluxpay.common.exception.BusniessRuleViolationException;
 import com.fluxpay.common.exception.ResourceNotFoundException;
@@ -17,11 +18,13 @@ import com.fluxpay.payment.processor.dto.PaymentProcessorResponse;
 import com.fluxpay.payment.repository.OrderRepository;
 import com.fluxpay.payment.repository.PaymentRepository;
 import com.fluxpay.payment.service.PaymentService;
+import com.fluxpay.payment.statemachine.PaymentTransitionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -33,6 +36,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentGatewayRouter paymentGatewayRouter;
     private final PaymentMapper paymentMapper;
+    private final PaymentTransitionService paymentTransitionService;
 
     @Override
     @Transactional
@@ -71,9 +75,13 @@ public class PaymentServiceImpl implements PaymentService {
         switch (result) {
             case PaymentResult.Pending pending -> payment.setProcessorReference(pending.registrationRef());
             case PaymentResult.Failure failure -> {
-                payment.setStatus(PaymentStatus.FAILED);
+//                payment.setStatus(PaymentStatus.FAILED);
+                paymentTransitionService.apply(payment, PaymentEvent.AUTHORIZE_FAIL);
                 payment.setErrorCode(failure.errorCode());
                 payment.setErrorDescription(failure.errorDescription());
+            }
+            case PaymentResult.Success success-> {
+
             }
         }
 
@@ -82,4 +90,33 @@ public class PaymentServiceImpl implements PaymentService {
 
         return paymentMapper.toResponse(payment);
     }
+
+    @Override
+    public PaymentResponse capture(UUID merchantId, UUID paymentId) {
+        Payment payment = paymentRepository.findByIdAndMerchantId(paymentId, merchantId)
+                .orElseThrow(() -> new ResourceNotFoundException("PAYMENT", "payment not found for paymentId: " + paymentId));
+
+//        payment.setStatus(PaymentStatus.CAPTURING);
+        paymentTransitionService.apply(payment, PaymentEvent.CAPTURE_REQUEST);
+
+        PaymentResult paymentResult = paymentGatewayRouter.capture(payment.getMethod(), paymentId);
+
+        if(paymentResult instanceof PaymentResult.Success success){
+//            payment.setStatus(PaymentStatus.CAPTURED);
+            paymentTransitionService.apply(payment, PaymentEvent.CAPTURE_SUCCESS);
+            payment.setCapturedAt(LocalDateTime.now());
+            log.info("Payment capture for payment Id: {}", paymentId);
+        }
+        else if(paymentResult instanceof PaymentResult.Failure failure){
+//           payment.setStatus(PaymentStatus.AUTHORIZED);
+            paymentTransitionService.apply(payment, PaymentEvent.CAPTURE_FAIL);
+           payment.setErrorDescription(failure.errorDescription());
+           payment.setErrorCode(failure.errorCode());
+           log.warn("Payment capture failed for payment Id: {}", paymentId);
+        }
+
+        payment = paymentRepository.save(payment);
+        return paymentMapper.toResponse(payment);
+    }
+
 }

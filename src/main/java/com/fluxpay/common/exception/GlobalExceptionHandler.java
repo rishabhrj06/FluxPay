@@ -28,4 +28,11 @@ public class GlobalExceptionHandler {
                 ErrorResponse.of(ex.getErrorCode(), ex.getMessage())
         );
     }
+
+    @ExceptionHandler(IllegalStateTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateTransitionException(IllegalStateTransitionException ex){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ErrorResponse.of(ex.getFromState(), ex.getToEvent())
+        );
+    }
 }
