@@ -81,7 +81,8 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.setErrorDescription(failure.errorDescription());
             }
             case PaymentResult.Success success-> {
-
+                log.warn("Invalid state.");
+                return null;
             }
         }
 
@@ -103,13 +104,15 @@ public class PaymentServiceImpl implements PaymentService {
 
         if(paymentResult instanceof PaymentResult.Success success){
 //            payment.setStatus(PaymentStatus.CAPTURED);
+
             paymentTransitionService.apply(payment, PaymentEvent.CAPTURE_SUCCESS);
             payment.setCapturedAt(LocalDateTime.now());
             log.info("Payment capture for payment Id: {}", paymentId);
         }
         else if(paymentResult instanceof PaymentResult.Failure failure){
 //           payment.setStatus(PaymentStatus.AUTHORIZED);
-            paymentTransitionService.apply(payment, PaymentEvent.CAPTURE_FAIL);
+//
+           paymentTransitionService.apply(payment, PaymentEvent.CAPTURE_FAIL);
            payment.setErrorDescription(failure.errorDescription());
            payment.setErrorCode(failure.errorCode());
            log.warn("Payment capture failed for payment Id: {}", paymentId);
@@ -117,6 +120,48 @@ public class PaymentServiceImpl implements PaymentService {
 
         payment = paymentRepository.save(payment);
         return paymentMapper.toResponse(payment);
+    }
+
+    @Override
+    @Transactional
+    public void resolveAuthorization(UUID paymentId, boolean approve, String bankRef,
+                                     String simBankErrorCode, String simBankErrorDescription) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("PAYMENT", "payment not found for paymentId: " + paymentId));
+
+        if(payment.getStatus() != PaymentStatus.AUTHORIZING) {
+            log.warn("Payment isn't in authorizing state for paymentId: {}, status: {}", paymentId, payment.getStatus());
+            return;
+        }
+
+        OrderRecord order = payment.getOrder();
+
+        if(approve) {
+            paymentTransitionService.apply(payment, PaymentEvent.AUTHORIZE_SUCCESS);
+            payment.setProcessorReference(bankRef);
+            payment.setAuthorizedAt(LocalDateTime.now());
+
+            // Auto-Capture
+            paymentTransitionService.apply(payment, PaymentEvent.CAPTURE_REQUEST);
+            PaymentResult captureResult = paymentGatewayRouter.capture(payment.getMethod(), paymentId);
+
+            if(captureResult instanceof PaymentResult.Success success) {
+                paymentTransitionService.apply(payment, PaymentEvent.CAPTURE_SUCCESS);
+                payment.setCapturedAt(LocalDateTime.now());
+                order.setStatus(OrderStatus.PAID);
+            } else if(captureResult instanceof PaymentResult.Failure failure) {
+                paymentTransitionService.apply(payment, PaymentEvent.CAPTURE_FAIL);
+                payment.setErrorCode(failure.errorCode());
+                payment.setErrorDescription(failure.errorDescription());
+            }
+        } else {
+            paymentTransitionService.apply(payment, PaymentEvent.AUTHORIZE_FAIL);
+            payment.setErrorCode(simBankErrorCode);
+            payment.setErrorDescription(simBankErrorDescription);
+        }
+
+        paymentRepository.save(payment);
+        orderRepository.save(order);
     }
 
 }

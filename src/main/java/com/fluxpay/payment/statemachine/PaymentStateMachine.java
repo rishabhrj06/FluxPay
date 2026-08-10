@@ -13,6 +13,7 @@ public class PaymentStateMachine {
 
     private record Transition(PaymentStatus from, PaymentEvent event) {}
 
+    // Map.of() supports maximum of only 10 pairs
     private static final Map<Transition, PaymentStatus> TRANSITION = Map.ofEntries(
             Map.entry(new Transition(PaymentStatus.CREATED, PaymentEvent.AUTHORIZE_ATTEMPT), PaymentStatus.AUTHORIZING),
             Map.entry(new Transition(PaymentStatus.AUTHORIZING, PaymentEvent.AUTHORIZE_SUCCESS), PaymentStatus.AUTHORIZED),
