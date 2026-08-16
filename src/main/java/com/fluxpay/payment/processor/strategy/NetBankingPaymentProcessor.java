@@ -1,7 +1,6 @@
 package com.fluxpay.payment.processor.strategy;
 
 import com.fluxpay.common.utlis.RandomizerUtil;
-import com.fluxpay.payment.gateway.dto.PaymentResult;
 import com.fluxpay.payment.processor.PaymentProcessor;
 import com.fluxpay.payment.processor.dto.PaymentProcessorRequest;
 import com.fluxpay.payment.processor.dto.PaymentProcessorResponse;

@@ -11,9 +11,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 @Component
+@RequiredArgsConstructor
 public class PaymentProcessorRouter {
 
-    private Map<PaymentMethod, PaymentProcessor> paymentProcessors;
+    private final Map<PaymentMethod, PaymentProcessor> paymentProcessors;
 
     public PaymentProcessorResponse process(PaymentProcessorRequest request){
         PaymentProcessor processor = paymentProcessors.get(request.method());

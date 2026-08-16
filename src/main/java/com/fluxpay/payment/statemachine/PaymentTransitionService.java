@@ -15,12 +15,11 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class PaymentTransitionService {
 
-    private PaymentTransitionLogRepository paymentTransitionLogRepository;
-    private PaymentStateMachine paymentStateMachine;
+    private final PaymentTransitionLogRepository paymentTransitionLogRepository;
+    private final PaymentStateMachine paymentStateMachine;
 
     public PaymentStatus apply(Payment payment, PaymentEvent paymentEvent) {
         PaymentStatus next = paymentStateMachine.transition(payment.getStatus(), paymentEvent);
-        payment.setStatus(next);
         PaymentTransitionLog log = PaymentTransitionLog.builder()
                 .payment(payment)
                 .fromStatus(payment.getStatus())
@@ -30,6 +29,7 @@ public class PaymentTransitionService {
                 .toStatus(next)
                 .build();
 
+        payment.setStatus(next);
         paymentTransitionLogRepository.save(log);
         return next;
     }

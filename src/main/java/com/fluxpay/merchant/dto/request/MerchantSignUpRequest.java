@@ -13,8 +13,10 @@ public record MerchantSignUpRequest(
         @NotNull(message = "Email is required")
         String email,
 
-        @NotNull(message = "Password is required")
-        @Size(min = 8, max = 16, message = "Password should be between 8 to 16 character")
+        @Pattern(
+                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
+                message = "Password must contain at least 8 characters, one uppercase, one lowercase, one digit, and one special character"
+        )
         String password,
 
         @NotNull(message = "Business name is required")

@@ -1,6 +1,8 @@
 package com.fluxpay.merchant.controller;
 
+import com.fluxpay.merchant.dto.request.LoginRequest;
 import com.fluxpay.merchant.dto.request.MerchantSignUpRequest;
+import com.fluxpay.merchant.dto.response.LoginResponse;
 import com.fluxpay.merchant.dto.response.MerchantResponse;
 import com.fluxpay.merchant.service.AuthService;
 import jakarta.validation.Valid;
@@ -23,6 +25,13 @@ public class AuthController {
     public ResponseEntity<MerchantResponse> signUp(@RequestBody @Valid MerchantSignUpRequest request){
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 authService.signUp(request)
+        );
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request){
+        return ResponseEntity.status(HttpStatus.OK).body(
+                authService.login(request)
         );
     }
 }
