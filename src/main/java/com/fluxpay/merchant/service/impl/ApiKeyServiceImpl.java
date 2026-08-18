@@ -12,6 +12,7 @@ import com.fluxpay.merchant.repository.MerchantRepository;
 import com.fluxpay.merchant.service.ApiKeyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     private final ApiKeyRepository apiKeyRepository;
     private final MerchantRepository merchantRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -43,7 +45,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .merchant(merchant)
                 .keyId(keyId)
                 .environment(request.environment())
-                .keySecretHash(rawSecret) // TODO: encode with BcryptPasswordEncoder
+                .keySecretHash(passwordEncoder.encode(rawSecret)) // TODO: encode with BcryptPasswordEncoder
                 .build();
 
         apiKeyRepository.save(apiKey);
