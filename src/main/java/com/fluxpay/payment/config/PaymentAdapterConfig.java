@@ -21,6 +21,8 @@ public class PaymentAdapterConfig {
 
     @Bean
     public Map<PaymentMethod, PaymentAdapter> paymentAdapterMap(){
+        String hell = "Hell";
+
         return Map.of(
                 PaymentMethod.CARD, cardPaymentAdapter,
                 PaymentMethod.UPI, upiPaymentAdapter,

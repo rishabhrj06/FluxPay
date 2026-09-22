@@ -1,5 +1,6 @@
 package com.fluxpay.payment.controller;
 
+import com.fluxpay.merchant.security.MerchantContext;
 import com.fluxpay.payment.dto.request.PaymentInitRequest;
 import com.fluxpay.payment.dto.response.PaymentResponse;
 import com.fluxpay.payment.service.PaymentService;
@@ -16,19 +17,18 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PaymentController {
 
-    UUID merchantId = UUID.fromString("f05994b8-28ec-4ebf-ad34-2910c7bf8753");
-
     private final PaymentService paymentService;
+    private final MerchantContext merchantContext;
 
     @PostMapping
     public ResponseEntity<PaymentResponse> initiatePayment(@Valid @RequestBody PaymentInitRequest request){
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(paymentService.initiatePayment(merchantId, request));
+                .body(paymentService.initiatePayment(merchantContext.getMerchantId(), request));
     }
 
     @PostMapping("/{paymentId}/capture")
     public ResponseEntity<PaymentResponse> capture(@PathVariable UUID paymentId){
-        return ResponseEntity.ok(paymentService.capture(merchantId, paymentId));
+        return ResponseEntity.ok(paymentService.capture(merchantContext.getMerchantId(), paymentId));
     }
 
 }

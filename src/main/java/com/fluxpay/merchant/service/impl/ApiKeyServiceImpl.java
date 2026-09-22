@@ -2,6 +2,7 @@ package com.fluxpay.merchant.service.impl;
 
 import com.fluxpay.common.exception.ResourceNotFoundException;
 import com.fluxpay.common.utlis.RandomizerUtil;
+import com.fluxpay.merchant.cache.ApiKeyCache;
 import com.fluxpay.merchant.dto.request.CreateApiKeyRequest;
 import com.fluxpay.merchant.dto.response.ApiKeyCreateResponse;
 import com.fluxpay.merchant.dto.response.ApiKeyResponse;
@@ -29,6 +30,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     private final ApiKeyRepository apiKeyRepository;
     private final MerchantRepository merchantRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ApiKeyCache cache;
 
     @Override
     @Transactional
@@ -45,12 +47,22 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .merchant(merchant)
                 .keyId(keyId)
                 .environment(request.environment())
-                .keySecretHash(passwordEncoder.encode(rawSecret)) // TODO: encode with BcryptPasswordEncoder
+                .keySecretHash(passwordEncoder.encode(rawSecret))
                 .build();
 
         apiKeyRepository.save(apiKey);
 
-        return new ApiKeyCreateResponse(apiKey.getId(), keyId, rawSecret, request.environment());
+        ApiKeyCreateResponse response =
+                new ApiKeyCreateResponse(
+                        apiKey.getId(),
+                        keyId,
+                        rawSecret,
+                        request.environment()
+                );
+
+        System.out.println(response);
+
+        return response;
     }
 
     @Override
@@ -76,6 +88,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .orElseThrow(() -> new ResourceNotFoundException("API_KEY", keyId));
 
         key.setEnabled(false);
+        cache.evict(key.getKeyId());
     }
 
     @Override
@@ -89,11 +102,12 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
         String newRawSecret = RandomizerUtil.randomBase64(40);
         apiKey.setPreviousKeySecretHash(apiKey.getKeySecretHash());
-        apiKey.setKeySecretHash(newRawSecret);
+        apiKey.setKeySecretHash(passwordEncoder.encode(newRawSecret));
         apiKey.setRotatedAt(LocalDateTime.now());
         apiKey.setGracePeriodExpiresAt(LocalDateTime.now().plusHours(24));
 
         apiKey = apiKeyRepository.save(apiKey);
+        cache.evict(apiKey.getKeyId());
 
         return new ApiKeyCreateResponse(apiKey.getId(), apiKey.getKeyId(), newRawSecret, apiKey.getEnvironment());
     }

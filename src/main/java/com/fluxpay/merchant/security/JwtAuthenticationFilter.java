@@ -1,6 +1,7 @@
 package com.fluxpay.merchant.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,7 +52,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             filterChain.doFilter(request, response);
-        } catch (Exception ex) {
+        } catch(JwtException ex) {
+            log.error("JWT Authentication failed: {}", ex.getMessage());
             handlerExceptionResolver.resolveException(request, response, null, ex);
         }
     }

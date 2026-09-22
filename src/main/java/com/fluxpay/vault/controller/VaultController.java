@@ -1,5 +1,6 @@
 package com.fluxpay.vault.controller;
 
+import com.fluxpay.merchant.security.MerchantContext;
 import com.fluxpay.vault.dto.request.TokenizeRequest;
 import com.fluxpay.vault.dto.response.TokenizeResponse;
 import com.fluxpay.vault.service.VaultService;
@@ -20,13 +21,11 @@ import java.util.UUID;
 public class VaultController {
 
     private final VaultService vaultService;
-
-    UUID merchantId = UUID.fromString("c5d157b0-bad2-49cc-b295-aa8da04f8d3c");
-
+    private final MerchantContext merchantContext;
 
     @PostMapping("/tokenize")
     public ResponseEntity<TokenizeResponse> createToken(@Valid @RequestBody TokenizeRequest request){
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(vaultService.createToken(merchantId, request));
+                .body(vaultService.createToken(merchantContext.getMerchantId(), request));
     }
 }

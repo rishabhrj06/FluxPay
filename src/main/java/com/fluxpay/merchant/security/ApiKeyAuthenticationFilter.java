@@ -1,5 +1,10 @@
 package com.fluxpay.merchant.security;
 
+import com.fluxpay.common.exception.RateLimitException;
+import com.fluxpay.common.rate_limit.RateLimitResult;
+import com.fluxpay.common.rate_limit.RateLimiter;
+import com.fluxpay.merchant.cache.ApiKeyCache;
+import com.fluxpay.merchant.cache.ApiKeyCacheEntry;
 import com.fluxpay.merchant.entity.ApiKey;
 import com.fluxpay.merchant.repository.ApiKeyRepository;
 import jakarta.servlet.FilterChain;
@@ -8,22 +13,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 @Slf4j
@@ -36,6 +39,14 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
     private final HandlerExceptionResolver handlerExceptionResolver;
     private final ApiKeyRepository apiKeyRepository;
     private final MerchantContext merchantContext;
+    private final ApiKeyCache apiKeyCache;
+    private final RateLimiter rateLimiter;
+
+    @Value("${app.rate-limit.use-case.api-key.max-req-allowed}")
+    private Integer maxRequestAllowed;
+
+    @Value("${app.rate-limit.use-case.api-key.window-time}")
+    private Integer windowSeconds;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -55,19 +66,28 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             String keyId = credentials[0];
             String rawSecret = credentials[1];
 
-            ApiKey apiKey = apiKeyRepository.findByKeyId(keyId)
-                    .orElseThrow(() -> new BadCredentialsException("Invalid api key"));
+            ApiKeyCacheEntry apiKeyCacheEntry = apiKeyCache.get(keyId).orElseGet(() -> loadAndCache(keyId));
 
-            if(!apiKey.isEnabled() || !secretMatches(rawSecret, apiKey)){
+            if(!apiKeyCacheEntry.enabled() || !secretMatches(rawSecret, apiKeyCacheEntry)){
                 throw new BadCredentialsException("Invalid api key");
             }
+
+            RateLimitResult rateLimitResult = rateLimiter.tryAcquire("api_key:" + keyId, maxRequestAllowed, windowSeconds);
+
+            if(!rateLimitResult.allowed()) {
+                log.warn("Too many requests for keyId: {}", keyId);
+                throw new RateLimitException("Too many requests", rateLimitResult.retryAfterSeconds());
+            }
+
+            response.setHeader("X-Rate-Limit", String.valueOf(maxRequestAllowed));
+            response.setHeader("X-Rate-Limit-Remaining", String.valueOf(rateLimitResult.remaining()));
 
             var auth = new UsernamePasswordAuthenticationToken(keyId, null,
                     List.of(new SimpleGrantedAuthority("API_KEY_ROLE"))
             );
             SecurityContextHolder.getContext().setAuthentication(auth);
-            merchantContext.setKeyId(apiKey.getKeyId());
-            merchantContext.setMerchantId(UUID.fromString(apiKey.getKeyId()));
+            merchantContext.setKeyId(apiKeyCacheEntry.keyId());
+            merchantContext.setMerchantId(apiKeyCacheEntry.merchantId());
 
             filterChain.doFilter(request, response);
 
@@ -76,14 +96,28 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private boolean secretMatches(String rawSecret, ApiKey apiKey) {
-        if(BCRYPT.matches(rawSecret, apiKey.getKeySecretHash())) return true;
+    private ApiKeyCacheEntry loadAndCache(String keyId) {
+        ApiKey apiKey = apiKeyRepository.findByKeyId(keyId)
+                .orElseThrow(() -> new BadCredentialsException("Invalid api key"));
 
-        boolean isInGracePeriod = apiKey.getGracePeriodExpiresAt() != null &&
-                LocalDateTime.now().isBefore(apiKey.getGracePeriodExpiresAt());
+        ApiKeyCacheEntry entry = new ApiKeyCacheEntry(
+                apiKey.getKeyId(),
+                apiKey.getKeySecretHash(),
+                apiKey.getPreviousKeySecretHash(),
+                apiKey.getGracePeriodExpiresAt(),
+                apiKey.getEnvironment(),
+                apiKey.isEnabled(),
+                apiKey.getMerchant().getId()
+        );
+        apiKeyCache.put(keyId, entry);
+        return entry;
+    }
 
-        return isInGracePeriod && apiKey.getPreviousKeySecretHash() != null &&
-                BCRYPT.matches(rawSecret, apiKey.getPreviousKeySecretHash());
+    private boolean secretMatches(String rawSecret, ApiKeyCacheEntry apiKey) {
+        if(BCRYPT.matches(rawSecret, apiKey.keySecretHash())) return true;
+
+        return apiKey.isInGracePeriod() && apiKey.previousKeySecretHash() != null &&
+                BCRYPT.matches(rawSecret, apiKey.previousKeySecretHash());
     }
 
     //Authorization: Basic api_snfieomc:secret_ksjdcdkc
