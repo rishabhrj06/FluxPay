@@ -1,6 +1,7 @@
 package com.fluxpay.common.rate_limit;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
@@ -10,8 +11,9 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 @ConditionalOnProperty(name = "app.rate-limit.method", havingValue = "token-bucket-lua")
-public class TokenBucketLua implements RateLimiter {
+public class TokenBucketLua extends Object implements RateLimiter {
 
     private final StringRedisTemplate redis;
 

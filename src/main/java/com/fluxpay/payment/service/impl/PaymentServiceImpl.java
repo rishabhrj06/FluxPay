@@ -3,7 +3,7 @@ package com.fluxpay.payment.service.impl;
 import com.fluxpay.common.enums.OrderStatus;
 import com.fluxpay.common.enums.PaymentEvent;
 import com.fluxpay.common.enums.PaymentStatus;
-import com.fluxpay.common.exception.BusniessRuleViolationException;
+import com.fluxpay.common.exception.BusinessRuleViolationException;
 import com.fluxpay.common.exception.ResourceNotFoundException;
 import com.fluxpay.payment.dto.request.PaymentInitRequest;
 import com.fluxpay.payment.dto.response.PaymentResponse;
@@ -13,8 +13,6 @@ import com.fluxpay.payment.gateway.PaymentGatewayRouter;
 import com.fluxpay.payment.gateway.dto.PaymentRequest;
 import com.fluxpay.payment.gateway.dto.PaymentResult;
 import com.fluxpay.payment.mapper.PaymentMapper;
-import com.fluxpay.payment.mapper.PaymentMapperImpl;
-import com.fluxpay.payment.processor.dto.PaymentProcessorResponse;
 import com.fluxpay.payment.repository.OrderRepository;
 import com.fluxpay.payment.repository.PaymentRepository;
 import com.fluxpay.payment.service.PaymentService;
@@ -45,7 +43,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("ORDER", request.orderId()));
 
         if(order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.ATTEMPTED){
-            throw new BusniessRuleViolationException("ORDER_NOT_PAYBLE", "Order can't be paid for status: " + order.getStatus());
+            throw new BusinessRuleViolationException("ORDER_NOT_PAYBLE", "Order can't be paid for status: " + order.getStatus());
         }
 
         order.setStatus(OrderStatus.ATTEMPTED);

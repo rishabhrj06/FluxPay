@@ -2,7 +2,6 @@ package com.fluxpay.common.exception;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -30,8 +29,8 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(BusniessRuleViolationException.class)
-    public ResponseEntity<ErrorResponse> handleBusniessRuleViolationException(BusniessRuleViolationException ex){
+    @ExceptionHandler(BusinessRuleViolationException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessRuleViolationException(BusinessRuleViolationException ex){
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 ErrorResponse.of(ex.getErrorCode(), ex.getMessage())
         );
@@ -79,5 +78,10 @@ public class GlobalExceptionHandler {
                         ))
                 .body(ErrorResponse.of("RATE_LIMIT_EXCEEDED", ex.getMessage())
         );
+    }
+
+    @ExceptionHandler(IdempotencyConflictException.class)
+    public ResponseEntity<ErrorResponse> handleIdempotencyConflictException(IdempotencyConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponse.of("IDEMPOTENCY_CONFLICT", ex.getMessage()));
     }
 }

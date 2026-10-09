@@ -1,7 +1,7 @@
 package com.fluxpay.payment.service.impl;
 
 import com.fluxpay.common.enums.OrderStatus;
-import com.fluxpay.common.exception.BusniessRuleViolationException;
+import com.fluxpay.common.exception.BusinessRuleViolationException;
 import com.fluxpay.common.exception.DuplicateResourceException;
 import com.fluxpay.common.exception.ResourceNotFoundException;
 import com.fluxpay.payment.dto.request.CreateOrderRequest;
@@ -71,7 +71,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("ORDER", orderId));
 
         if(order.getStatus() == OrderStatus.CANCELED || order.getStatus() == OrderStatus.PAID){
-            throw new BusniessRuleViolationException("ORDER_CAN'T_BE_CANCELED",
+            throw new BusinessRuleViolationException("ORDER_CAN'T_BE_CANCELED",
                     "order can't be cancelled with the order status: " + order.getStatus().name()
             );
         }

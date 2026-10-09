@@ -63,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
 
         appUserRespository.save(appUser);
 
-        return new  MerchantResponse(
+        return new MerchantResponse(
                 merchant.getId(), merchant.getName(), merchant.getEmail(),
                 merchant.getBusinessName(), merchant.getBusinessType(), merchant.getMerchantStatus()
         );
