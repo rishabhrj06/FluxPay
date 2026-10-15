@@ -3,6 +3,7 @@ package com.fluxpay.payment.repository;
 import com.fluxpay.payment.dto.response.OrderResponse;
 import com.fluxpay.payment.entity.OrderRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -10,5 +11,6 @@ import java.util.UUID;
 public interface OrderRepository extends JpaRepository<OrderRecord, UUID> {
     boolean existsByMerchantIdAndReceipt(UUID merchantId, String receipt);
 
+    @Query("Select o from OrderRecord Where o.id = :")
     Optional<OrderRecord> findByIdAndMerchantId(UUID id, UUID merchantId);
 }

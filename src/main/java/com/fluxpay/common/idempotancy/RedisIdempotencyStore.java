@@ -15,7 +15,7 @@ import java.util.Optional;
 public class RedisIdempotencyStore implements IdempotencyStore {
 
     private final StringRedisTemplate redis;
-    private static final String PREFIX = "idempotency: ";
+    private static final String PREFIX = "idempotency:";
 
     @Override
     public boolean setIfAbsent(String key, Duration ttl) {

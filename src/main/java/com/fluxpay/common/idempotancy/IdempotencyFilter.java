@@ -24,6 +24,7 @@ import java.util.UUID;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@Deprecated
 public class IdempotencyFilter extends OncePerRequestFilter {
 
     private static final Set<String> GUARDED_METHODS = Set.of("PUT", "POST", "PATCH");
@@ -72,28 +73,31 @@ public class IdempotencyFilter extends OncePerRequestFilter {
         //first time claim
         ContentCachingResponseWrapper wrapper = new ContentCachingResponseWrapper(response);
         try{
-            chain.doFilter(request, wrapper);
-        } finally {
-            int status = wrapper.getStatus();
-            byte[] bodyBytes = wrapper.getContentAsByteArray();
-            String body = new String(bodyBytes, StandardCharsets.UTF_8);
+            try{
+                chain.doFilter(request, wrapper);
+            } finally {
+                int status = wrapper.getStatus();
+                byte[] bodyBytes = wrapper.getContentAsByteArray();
+                String body = new String(bodyBytes, StandardCharsets.UTF_8);
 
-            if(status < 400 && bodyBytes.length > 0) {
-                //success - store the completed response for future replays.
-                String stored = status + SEPARATOR + body;
-                idempotencyStore.store(key, stored, COMPLETED_TTL);
-                log.debug("Idempotency filter: stored response status: {} key: {}", status, key);
-            } else {
-                //Error or empty -> delete placeholder so client can retry cleanly
-                idempotencyStore.delete(key);
-                log.debug("Idempotency filter: deleted response status: {} key: {}", status, key);
+                if(status < 400 && bodyBytes.length > 0) {
+                    //success - store the completed response for future replays.
+                    String stored = status + SEPARATOR + body;
+                    idempotencyStore.store(key, stored, COMPLETED_TTL);
+                    log.debug("Idempotency filter: stored response status: {} key: {}", status, key);
+                } else {
+                    //Error or empty -> delete placeholder so client can retry cleanly
+                    idempotencyStore.delete(key);
+                    log.debug("Idempotency filter: deleted response status: {} key: {}", status, key);
+                }
             }
-
+        } finally {
             wrapper.copyBodyToResponse();
         }
+
     }
 
-    private void replay(HttpServletRequest request, HttpServletResponse response, String stored) throws IOException {
+     private void replay(HttpServletRequest request, HttpServletResponse response, String stored) throws IOException {
         int separatorIndex = stored.indexOf(SEPARATOR);
         if(separatorIndex < 0) {
             var ex = new IdempotencyConflictException("A request with this idempotency key is in progress.");
