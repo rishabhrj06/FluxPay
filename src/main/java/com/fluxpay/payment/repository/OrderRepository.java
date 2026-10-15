@@ -11,6 +11,5 @@ import java.util.UUID;
 public interface OrderRepository extends JpaRepository<OrderRecord, UUID> {
     boolean existsByMerchantIdAndReceipt(UUID merchantId, String receipt);
 
-    @Query("Select o from OrderRecord Where o.id = :")
     Optional<OrderRecord> findByIdAndMerchantId(UUID id, UUID merchantId);
 }
